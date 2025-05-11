@@ -12,10 +12,10 @@ interface AdminUser {
 // Initial super admin - REPLACE THIS WITH YOUR OWN CREDENTIALS
 const INITIAL_SUPER_ADMIN: AdminUser = {
   id: "1",
-  name: "Your Name", // Change to your name
-  email: "your-email@example.com", // Change to your email
+  name: "Abdulmalik", // Change to your name
+  email: "amalikduale@gmail.com", // Change to your email
   // In a real app, this would be hashed
-  password: "your-secure-password", // Change to your password
+  password: "Maisha@0134", // Change to your password
   role: "super_admin",
   createdAt: new Date(),
 }
