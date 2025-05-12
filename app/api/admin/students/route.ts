@@ -1,14 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { isAdmin } from "@/lib/auth"
-import { prisma } from "@/lib/db"
+import prisma from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
-  // Check if user is admin
-  const isAdminUser = await isAdmin(request)
-  if (!isAdminUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url)
