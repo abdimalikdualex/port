@@ -20,6 +20,7 @@ export default function LoginPage() {
     password: "",
     rememberMe: false,
   })
+  const [error, setError] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -33,14 +34,50 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate authentication
     try {
-      // In a real app, you would call your authentication API here
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      router.push("/dashboard")
+      // Simulate authentication - in a real app, this would be an API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Check credentials against our mock data
+      // In a real app, this would be validated by your backend
+      if (formData.email === "student@example.com" && formData.password === "password123") {
+        // Store user info in localStorage
+        localStorage.setItem("userLoggedIn", "true")
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            id: "user-1",
+            name: "Demo Student",
+            email: formData.email,
+            role: "student",
+          }),
+        )
+
+        // Redirect to dashboard
+        router.push("/dashboard")
+      } else if (formData.email === "admin@example.com" && formData.password === "admin123") {
+        // Store admin info in localStorage
+        localStorage.setItem("adminLoggedIn", "true")
+        localStorage.setItem(
+          "adminUser",
+          JSON.stringify({
+            id: "admin-1",
+            name: "Admin User",
+            email: formData.email,
+            role: "admin",
+          }),
+        )
+
+        // Redirect to admin dashboard
+        router.push("/admin")
+      } else {
+        setError("Invalid email or password. Please check your credentials.")
+      }
     } catch (error) {
       console.error("Login failed:", error)
+      setError("An error occurred during login. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -57,6 +94,9 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 mb-4 text-sm border rounded-md bg-red-50 border-red-200 text-red-600">{error}</div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -85,6 +125,7 @@ export default function LoginPage() {
                 onChange={handleChange}
               />
             </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox id="remember" checked={formData.rememberMe} onCheckedChange={handleCheckboxChange} />
               <Label htmlFor="remember" className="text-sm font-normal">
@@ -93,7 +134,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={false}>
+            <Button type="submit" className="w-full">
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

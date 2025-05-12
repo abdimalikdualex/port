@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "E-Learning Platform",
-  description: "Premium English, Kiswahili, and IT courses taught by industry experts.",
+  title: "Express Academy",
+  description: "Premium learning platform for English, Kiswahili, IT, and professional courses.",
     generator: 'v0.dev'
 }
 

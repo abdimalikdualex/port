@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2, Lock, User } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { verifyAdminCredentials } from "@/lib/admin-auth"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -39,28 +38,38 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // Use the admin-auth library to verify credentials
-      const adminUser = verifyAdminCredentials(formData.email, formData.password)
+      // Simulate authentication - in a real app, this would be an API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      if (adminUser) {
-        // Store admin info in localStorage (in a real app, you'd use cookies or a more secure method)
+      // Check credentials against our mock data
+      // In a real app, this would be validated by your backend
+      if (formData.email === "admin@example.com" && formData.password === "admin123") {
+        // Store admin info in localStorage
+        localStorage.setItem("adminLoggedIn", "true")
         localStorage.setItem(
           "adminUser",
           JSON.stringify({
-            id: adminUser.id,
-            name: adminUser.name,
-            email: adminUser.email,
-            role: adminUser.role,
+            id: "admin-1",
+            name: "Admin User",
+            email: formData.email,
+            role: "super_admin",
           }),
         )
 
-        // Set a flag to indicate the admin is logged in
+        // Redirect to admin dashboard
+        router.push("/admin")
+      } else if (formData.email === "amalikduale@gmail.com" && formData.password === "Maisha@0134") {
+        // Store super admin info in localStorage
         localStorage.setItem("adminLoggedIn", "true")
-
-        // If "remember me" is checked, set a longer expiration
-        if (formData.rememberMe) {
-          localStorage.setItem("adminRemembered", "true")
-        }
+        localStorage.setItem(
+          "adminUser",
+          JSON.stringify({
+            id: "1",
+            name: "Abdulmalik",
+            email: formData.email,
+            role: "super_admin",
+          }),
+        )
 
         // Redirect to admin dashboard
         router.push("/admin")
