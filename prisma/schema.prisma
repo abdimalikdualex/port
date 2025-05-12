@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -12,14 +11,14 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   name           String
-  email          String    @unique
+  email          String        @unique
   hashedPassword String?
   image          String?
-  role           Role      @default(STUDENT)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  role           Role          @default(STUDENT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   purchases      Purchase[]
   comments       Comment[]
   supportChats   SupportChat[]
@@ -32,9 +31,9 @@ enum Role {
 }
 
 model Course {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
-  description String    @db.Text
+  description String     @db.Text
   price       Float
   imageUrl    String?
   category    String
@@ -42,10 +41,10 @@ model Course {
   duration    String
   lectures    Int
   instructor  String
-  featured    Boolean   @default(false)
-  published   Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  featured    Boolean    @default(false)
+  published   Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   videos      Video[]
   materials   Material[]
   purchases   Purchase[]
@@ -96,27 +95,27 @@ model Purchase {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
+  id        String    @id @default(cuid())
+  content   String    @db.Text
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   parentId  String?
-  parent    Comment? @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: SetNull)
   replies   Comment[] @relation("CommentToComment")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model SupportChat {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
   status    ChatStatus @default(OPEN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 enum ChatStatus {
@@ -126,10 +125,10 @@ enum ChatStatus {
 }
 
 model Message {
-  id            String   @id @default(cuid())
-  content       String   @db.Text
-  isFromAdmin   Boolean  @default(false)
+  id            String      @id @default(cuid())
+  content       String      @db.Text
+  isFromAdmin   Boolean     @default(false)
   supportChatId String
   supportChat   SupportChat @relation(fields: [supportChatId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
+  createdAt     DateTime    @default(now())
 }
