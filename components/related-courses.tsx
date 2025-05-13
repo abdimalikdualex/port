@@ -1,74 +1,65 @@
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import CourseCard from "@/components/course-card"
+import Link from "next/link"
+import { getAllCourses } from "@/lib/data/courses"
 
-// Mock data for related courses - customized for web design related courses
-const relatedCourses = [
-  {
-    id: 2,
-    title: "Graphic Design Fundamentals",
-    description: "Learn essential graphic design principles, tools, and techniques for print and digital media.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 84.99,
-    category: "Graphic Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Beginner",
-    rating: 4.8,
-    students: 876,
-  },
-  {
-    id: 3,
-    title: "UI/UX Design Principles",
-    description: "Master user interface and experience design for websites and applications.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 79.99,
-    category: "Web Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Intermediate",
-    rating: 4.9,
-    students: 1245,
-  },
-  {
-    id: 4,
-    title: "HTML & CSS Mastery",
-    description: "Comprehensive guide to HTML5 and CSS3 for modern web development.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 74.99,
-    category: "Web Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Beginner to Intermediate",
-    rating: 4.8,
-    students: 876,
-  },
-  {
-    id: 5,
-    title: "JavaScript for Web Designers",
-    description: "Learn how to add interactivity to your websites with JavaScript.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 89.99,
-    category: "Web Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Intermediate",
-    rating: 4.9,
-    students: 654,
-  },
-]
+interface RelatedCoursesProps {
+  currentCourseId: string
+  category: string
+  limit?: number
+}
 
-export default function RelatedCourses() {
+export default function RelatedCourses({ currentCourseId, category, limit = 3 }: RelatedCoursesProps) {
+  const allCourses = getAllCourses()
+
+  // Filter courses by category and exclude current course
+  const relatedCourses = allCourses
+    .filter((course) => course.category === category && course.id !== currentCourseId)
+    .slice(0, limit)
+
+  if (relatedCourses.length === 0) {
+    return null
+  }
+
   return (
-    <Carousel className="w-full">
-      <CarouselContent>
-        {relatedCourses.map((course) => (
-          <CarouselItem key={course.id} className="md:basis-1/2 lg:basis-1/3">
-            <div className="p-1">
-              <CourseCard course={course} />
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <div className="flex justify-end gap-2 mt-4">
-        <CarouselPrevious />
-        <CarouselNext />
+    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="px-4 py-5 sm:px-6">
+        <h3 className="text-lg leading-6 font-medium text-gray-900">Related Courses</h3>
+        <p className="mt-1 max-w-2xl text-sm text-gray-500">Other courses in {category}</p>
       </div>
-    </Carousel>
+      <div className="border-t border-gray-200">
+        <ul className="divide-y divide-gray-200">
+          {relatedCourses.map((course) => (
+            <li key={course.id}>
+              <Link href={`/courses/${course.id}`} className="block hover:bg-gray-50">
+                <div className="px-4 py-4 sm:px-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden">
+                      <img
+                        src={course.imageUrl || "/placeholder.svg"}
+                        alt={course.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-indigo-600 truncate">{course.title}</p>
+                      <p className="mt-1 text-sm text-gray-500 truncate">{course.instructor}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:flex sm:justify-between">
+                    <div className="sm:flex">
+                      <p className="flex items-center text-sm text-gray-500">{course.level}</p>
+                      <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">{course.duration}</p>
+                    </div>
+                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                      <p className="font-medium text-indigo-600">${course.salePrice || course.price}</p>
+                      {course.salePrice && <p className="ml-2 line-through">${course.price}</p>}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   )
 }

@@ -8,73 +8,27 @@ import { ThumbsUp, Flag, MoreVertical, Send } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "@/hooks/use-toast"
-
-interface Comment {
-  id: string
-  userId: string
-  userName: string
-  userAvatar: string
-  content: string
-  date: string
-  likes: number
-  userLiked: boolean
-  replies?: Comment[]
-}
+import { getCommentsForCourse, addComment, likeComment } from "@/lib/data/comments"
+import type { Comment } from "@/lib/data/comments"
 
 export default function CommentSection({ courseId }: { courseId: string }) {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userInfo, setUserInfo] = useState<any>(null)
 
   useEffect(() => {
     // Check if user is logged in
-    const userInfo = localStorage.getItem("userInfo")
-    setIsLoggedIn(!!userInfo)
-
-    // Load comments from localStorage
-    const storedComments = localStorage.getItem(`comments-${courseId}`)
-    if (storedComments) {
-      setComments(JSON.parse(storedComments))
-    } else {
-      // Mock data for initial comments
-      const initialComments: Comment[] = [
-        {
-          id: "1",
-          userId: "user1",
-          userName: "Ahmed Hassan",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content:
-            "Waxaan aad ugu faraxsanahay koorsooyinka. Waxay ii fududeeyeen inaan barto xirfado cusub oo muhiim ah.",
-          date: "2 days ago",
-          likes: 12,
-          userLiked: false,
-        },
-        {
-          id: "2",
-          userId: "user2",
-          userName: "Fatima Omar",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content: "Macallinka waa mid aad u wanaagsan. Waxaan bartay waxyaabo badan oo aan horay u aqoon.",
-          date: "1 week ago",
-          likes: 8,
-          userLiked: false,
-        },
-        {
-          id: "3",
-          userId: "user3",
-          userName: "John Smith",
-          userAvatar: "/placeholder.svg?height=40&width=40",
-          content:
-            "This course is excellent! The instructor explains everything clearly and the exercises are very helpful.",
-          date: "2 weeks ago",
-          likes: 15,
-          userLiked: false,
-        },
-      ]
-      setComments(initialComments)
-      localStorage.setItem(`comments-${courseId}`, JSON.stringify(initialComments))
+    const storedUserInfo = localStorage.getItem("userInfo")
+    if (storedUserInfo) {
+      setIsLoggedIn(true)
+      setUserInfo(JSON.parse(storedUserInfo))
     }
+
+    // Load comments
+    const courseComments = getCommentsForCourse(courseId)
+    setComments(courseComments)
   }, [courseId])
 
   const handleSubmitComment = () => {
@@ -93,22 +47,18 @@ export default function CommentSection({ courseId }: { courseId: string }) {
 
     // Simulate API call
     setTimeout(() => {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo") || '{"name": "Guest User", "avatar": ""}')
-
-      const newCommentObj: Comment = {
-        id: Date.now().toString(),
-        userId: "currentUser",
-        userName: userInfo.name,
-        userAvatar: userInfo.avatar || "/placeholder.svg?height=40&width=40",
+      const newCommentObj = addComment(courseId, {
+        courseId,
+        userId: userInfo?.id || "guest",
+        userName: userInfo?.name || "Guest User",
+        userAvatar: userInfo?.avatar || "/placeholder.svg?height=40&width=40",
         content: newComment,
         date: "Just now",
         likes: 0,
         userLiked: false,
-      }
+      })
 
-      const updatedComments = [newCommentObj, ...comments]
-      setComments(updatedComments)
-      localStorage.setItem(`comments-${courseId}`, JSON.stringify(updatedComments))
+      setComments([newCommentObj, ...comments])
       setNewComment("")
       setIsSubmitting(false)
 
@@ -129,19 +79,21 @@ export default function CommentSection({ courseId }: { courseId: string }) {
       return
     }
 
-    const updatedComments = comments.map((comment) => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          likes: comment.userLiked ? comment.likes - 1 : comment.likes + 1,
-          userLiked: !comment.userLiked,
+    const success = likeComment(commentId, courseId)
+    if (success) {
+      const updatedComments = comments.map((comment) => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            likes: comment.userLiked ? comment.likes - 1 : comment.likes + 1,
+            userLiked: !comment.userLiked,
+          }
         }
-      }
-      return comment
-    })
+        return comment
+      })
 
-    setComments(updatedComments)
-    localStorage.setItem(`comments-${courseId}`, JSON.stringify(updatedComments))
+      setComments(updatedComments)
+    }
   }
 
   const handleReportComment = (commentId: string) => {

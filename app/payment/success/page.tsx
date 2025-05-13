@@ -1,98 +1,87 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { verifyTransaction } from "@/lib/payment-service"
-import { CheckCircle2, Loader2 } from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle2 } from "lucide-react"
+import { getCourseById } from "@/lib/data/courses"
+import { enrollInCourse } from "@/lib/data/users"
 
 export default function PaymentSuccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isVerifying, setIsVerifying] = useState(true)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [message, setMessage] = useState("Verifying your payment...")
+  const courseId = searchParams.get("courseId")
+  const transactionId = searchParams.get("transactionId")
+
+  const [course, setCourse] = useState<any>(null)
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      try {
-        const paymentId = searchParams.get("paymentId")
-        const payerId = searchParams.get("PayerID")
-
-        if (!paymentId) {
-          setMessage("Payment information is missing. Please try again.")
-          setIsSuccess(false)
-          setIsVerifying(false)
-          return
-        }
-
-        // Verify the payment with PayPal
-        const result = await verifyTransaction(paymentId, "paypal")
-
-        if (result.success) {
-          setIsSuccess(true)
-          setMessage("Payment successful! You now have access to the course.")
-
-          // Redirect to dashboard after a short delay
-          setTimeout(() => {
-            router.push("/dashboard")
-          }, 3000)
-        } else {
-          setIsSuccess(false)
-          setMessage(result.message || "Payment verification failed. Please contact support.")
-        }
-      } catch (error) {
-        console.error("Payment verification error:", error)
-        setIsSuccess(false)
-        setMessage("An error occurred while verifying your payment. Please contact support.")
-      } finally {
-        setIsVerifying(false)
-      }
+    if (!courseId) {
+      router.push("/courses")
+      return
     }
 
-    verifyPayment()
-  }, [router, searchParams])
+    const courseData = getCourseById(courseId)
+    if (!courseData) {
+      router.push("/courses")
+      return
+    }
+
+    setCourse(courseData)
+
+    // Record the enrollment
+    const userInfo = localStorage.getItem("userInfo")
+    if (userInfo) {
+      const user = JSON.parse(userInfo)
+      enrollInCourse(user.id, courseId)
+    }
+  }, [courseId, router, transactionId])
 
   return (
-    <div className="container px-4 py-12 mx-auto">
+    <div className="container mx-auto py-12 px-4">
       <div className="max-w-md mx-auto">
-        <Card className={isSuccess ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
-          <CardContent className="pt-6 text-center">
-            {isVerifying ? (
-              <>
-                <Loader2 className="w-16 h-16 mx-auto mb-4 text-indigo-500 animate-spin" />
-                <h2 className="text-2xl font-bold mb-2">Verifying Payment</h2>
-                <p className="text-muted-foreground">Please wait while we verify your payment...</p>
-              </>
-            ) : isSuccess ? (
-              <>
-                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                <h2 className="text-2xl font-bold text-green-700 mb-2">Payment Successful!</h2>
-                <p className="text-green-600 mb-4">{message}</p>
-                <p className="text-sm text-green-600">Redirecting to your dashboard...</p>
-              </>
-            ) : (
-              <>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
-                  <span className="text-2xl text-amber-600">!</span>
+        <Card className="border-green-100">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto mb-4 bg-green-100 p-3 rounded-full w-16 h-16 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl text-green-700">Payment Successful!</CardTitle>
+            <CardDescription>Your enrollment is now complete</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium">{course?.title}</h3>
+                <p className="text-sm text-gray-500">{course?.instructor}</p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Transaction ID:</span>
+                  <span className="font-mono">{transactionId}</span>
                 </div>
-                <h2 className="text-2xl font-bold text-amber-700 mb-2">Payment Verification Issue</h2>
-                <p className="text-amber-600 mb-4">{message}</p>
-              </>
-            )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Amount Paid:</span>
+                  <span>${course?.salePrice || course?.price}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Date:</span>
+                  <span>{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            {!isVerifying && !isSuccess && (
-              <Button onClick={() => router.push("/payment")} className="bg-amber-600 hover:bg-amber-700">
-                Try Again
-              </Button>
-            )}
-            {!isVerifying && (
-              <Button onClick={() => router.push("/dashboard")} variant="outline" className="ml-2">
-                Go to Dashboard
-              </Button>
-            )}
+          <CardFooter className="flex flex-col space-y-2">
+            <Button
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              onClick={() => router.push(`/courses/${courseId}`)}
+            >
+              Start Learning
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard")}>
+              Go to Dashboard
+            </Button>
           </CardFooter>
         </Card>
       </div>

@@ -1,171 +1,71 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import CourseCard from "@/components/course-card"
-import { Search, SlidersHorizontal } from "lucide-react"
+import Link from "next/link"
+import { getAllCourses } from "@/lib/course-service"
 
-// Mock data for courses
-const courses = [
-  {
-    id: 1,
-    title: "Advanced English for Professionals",
-    description: "Master business English, professional writing, and advanced conversation skills.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 89.99,
-    category: "English",
-    instructor: "Mr. Abdijabar",
-    level: "Advanced",
-    rating: 4.8,
-    students: 1245,
-  },
-  {
-    id: 2,
-    title: "Kiswahili for Beginners",
-    description: "Learn the fundamentals of Kiswahili language including basic vocabulary and grammar.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 79.99,
-    category: "Kiswahili",
-    instructor: "Mr. Abdijabar",
-    level: "Beginner",
-    rating: 4.7,
-    students: 987,
-  },
-  {
-    id: 3,
-    title: "Web Design Masterclass",
-    description: "Comprehensive course on modern web design principles, HTML, CSS, and responsive design.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 94.99,
-    category: "Web Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "All Levels",
-    rating: 4.9,
-    students: 1089,
-  },
-  {
-    id: 4,
-    title: "Graphic Design Fundamentals",
-    description: "Learn essential graphic design principles, tools, and techniques for print and digital media.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 84.99,
-    category: "Graphic Design",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Beginner",
-    rating: 4.8,
-    students: 876,
-  },
-  {
-    id: 5,
-    title: "Video Editing with Adobe Premiere Pro",
-    description: "Master video editing techniques using Adobe Premiere Pro from basic to advanced levels.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 99.99,
-    category: "Video Editing",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Intermediate",
-    rating: 4.9,
-    students: 654,
-  },
-  {
-    id: 6,
-    title: "Microsoft Office Complete Package",
-    description: "Comprehensive training on Microsoft Word, Excel, PowerPoint, and Outlook for professional use.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 74.99,
-    category: "Computer Packages",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "All Levels",
-    rating: 4.7,
-    students: 1432,
-  },
-  {
-    id: 7,
-    title: "Digital Marketing Strategy",
-    description: "Learn how to create effective digital marketing campaigns that drive results.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 89.99,
-    category: "Online Marketing",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "Intermediate",
-    rating: 4.8,
-    students: 987,
-  },
-  {
-    id: 8,
-    title: "Dropshipping Business Masterclass",
-    description: "Start and scale your dropshipping business from scratch with proven strategies.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 109.99,
-    category: "Dropshipping",
-    instructor: "ABDULMALIK OMAR DUALE",
-    level: "All Levels",
-    rating: 4.9,
-    students: 765,
-  },
-  {
-    id: 9,
-    title: "Intermediate Kiswahili Conversation",
-    description: "Improve your Kiswahili speaking skills with practical conversation exercises and vocabulary.",
-    image: "/placeholder.svg?height=400&width=600",
-    price: 84.99,
-    category: "Kiswahili",
-    instructor: "Mr. Abdijabar",
-    level: "Intermediate",
-    rating: 4.8,
-    students: 543,
-  },
-]
+export default async function CoursesPage() {
+  const courses = await getAllCourses()
 
-export default function CoursesPage() {
   return (
-    <div className="container px-4 py-12 mx-auto">
-      <h1 className="mb-6 text-3xl font-bold tracking-tight sm:text-4xl">All Courses</h1>
-
-      <div className="flex flex-col gap-4 mb-8 md:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search courses..." className="pl-10" />
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900">Courses</h1>
+            <Link href="/" className="text-blue-600 hover:text-blue-800">
+              Back to Home
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Select defaultValue="all">
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="english">English</SelectItem>
-              <SelectItem value="kiswahili">Kiswahili</SelectItem>
-              <SelectItem value="web-design">Web Design</SelectItem>
-              <SelectItem value="graphic-design">Graphic Design</SelectItem>
-              <SelectItem value="video-editing">Video Editing</SelectItem>
-              <SelectItem value="computer-packages">Computer Packages</SelectItem>
-              <SelectItem value="online-marketing">Online Marketing</SelectItem>
-              <SelectItem value="dropshipping">Dropshipping</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="icon" className="w-full sm:w-10">
-            <SlidersHorizontal className="h-4 w-4" />
-            <span className="sr-only">Filter</span>
-          </Button>
+      </header>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {courses.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold text-gray-700">No courses found</h2>
+              <p className="mt-2 text-gray-500">Check back later for new courses.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course) => (
+                <div key={course.id} className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="h-48 bg-gray-200 flex items-center justify-center">
+                    {course.imageUrl ? (
+                      <img
+                        src={course.imageUrl || "/placeholder.svg"}
+                        alt={course.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-500">Course Image</span>
+                    )}
+                  </div>
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-lg font-medium text-gray-900">{course.title}</h3>
+                    <p className="mt-1 text-sm text-gray-600">{course.description.substring(0, 100)}...</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-gray-600 text-sm">{course.instructor}</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {course.level}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="text-gray-600 text-sm">{course.category}</span>
+                      <span className="text-lg font-bold text-gray-900">${course.price}</span>
+                    </div>
+                    <div className="mt-4">
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        View Course
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {courses.map((course) => (
-          <CourseCard key={course.id} course={course} />
-        ))}
-      </div>
+      </main>
     </div>
   )
 }

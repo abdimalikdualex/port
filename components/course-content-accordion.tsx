@@ -1,81 +1,136 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+"use client"
+
+import { useState } from "react"
+import { File, Play, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Lock, Play } from "lucide-react"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import VideoPlayer from "@/components/video-player"
+import type { Section } from "@/lib/data/videos"
+import type { Video } from "@/lib/data/videos"
+import type { Material } from "@/lib/data/materials"
 
-// Mock data for course content - customized for a web design course
-const courseContent = [
-  {
-    id: 1,
-    title: "Introduction to Web Design",
-    lectures: [
-      { id: 1, title: "Welcome to the Course", duration: "5:20", isPreview: true },
-      { id: 2, title: "Course Overview", duration: "8:15", isPreview: true },
-      { id: 3, title: "Setting Up Your Design Environment", duration: "12:40", isPreview: false },
-    ],
-    totalDuration: "26:15",
-  },
-  {
-    id: 2,
-    title: "HTML & CSS Fundamentals",
-    lectures: [
-      { id: 4, title: "HTML Document Structure", duration: "10:30", isPreview: false },
-      { id: 5, title: "Working with Text Elements", duration: "14:20", isPreview: false },
-      { id: 6, title: "CSS Styling Basics", duration: "11:15", isPreview: false },
-      { id: 7, title: "Responsive Design Principles", duration: "18:45", isPreview: false },
-    ],
-    totalDuration: "54:50",
-  },
-  {
-    id: 3,
-    title: "Modern Design Principles",
-    lectures: [
-      { id: 8, title: "Color Theory for Web", duration: "15:10", isPreview: false },
-      { id: 9, title: "Typography Best Practices", duration: "12:30", isPreview: false },
-      { id: 10, title: "Layout and Composition", duration: "20:15", isPreview: false },
-      { id: 11, title: "User Experience Fundamentals", duration: "18:40", isPreview: false },
-      { id: 12, title: "Designing for Mobile First", duration: "22:05", isPreview: false },
-    ],
-    totalDuration: "88:40",
-  },
-]
+interface CourseContentAccordionProps {
+  sections: Section[]
+  getVideosBySectionId: (sectionId: string) => Video[]
+  getMaterialsBySectionId: (sectionId: string) => Material[]
+}
 
-export default function CourseContentAccordion() {
+export default function CourseContentAccordion({
+  sections,
+  getVideosBySectionId,
+  getMaterialsBySectionId,
+}: CourseContentAccordionProps) {
+  const [openVideo, setOpenVideo] = useState<Video | null>(null)
+
+  const handleOpenVideo = (video: Video) => {
+    if (video.isPreview) {
+      setOpenVideo(video)
+    } else {
+      // Check if user has purchased the course
+      // For now, just show a preview message
+      setOpenVideo(video)
+    }
+  }
+
+  const handleCloseVideo = () => {
+    setOpenVideo(null)
+  }
+
   return (
-    <Accordion type="single" collapsible className="w-full">
-      {courseContent.map((section) => (
-        <AccordionItem key={section.id} value={`section-${section.id}`}>
-          <AccordionTrigger className="hover:no-underline">
-            <div className="flex flex-col items-start text-left sm:flex-row sm:items-center sm:justify-between sm:w-full">
-              <span>{section.title}</span>
-              <span className="text-sm text-muted-foreground">
-                {section.lectures.length} lectures • {section.totalDuration}
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ul className="space-y-2">
-              {section.lectures.map((lecture) => (
-                <li key={lecture.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div className="flex items-center">
-                    {lecture.isPreview ? (
-                      <Button variant="ghost" size="sm" className="mr-2 h-8 w-8 p-0">
-                        <Play className="h-4 w-4" />
-                        <span className="sr-only">Play preview</span>
-                      </Button>
-                    ) : (
-                      <div className="flex items-center justify-center mr-2 h-8 w-8">
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
-                    <span className={lecture.isPreview ? "" : "text-muted-foreground"}>{lecture.title}</span>
+    <>
+      <Accordion type="multiple" className="w-full">
+        {sections.map((section) => {
+          const videos = getVideosBySectionId(section.id)
+          const materials = getMaterialsBySectionId(section.id)
+          const totalItems = videos.length + materials.length
+          const totalDuration = videos.reduce((acc, video) => {
+            const [minutes, seconds] = video.duration.split(":").map(Number)
+            return acc + minutes * 60 + seconds
+          }, 0)
+
+          const hours = Math.floor(totalDuration / 3600)
+          const minutes = Math.floor((totalDuration % 3600) / 60)
+          const formattedDuration = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+
+          return (
+            <AccordionItem key={section.id} value={section.id} className="border-b">
+              <AccordionTrigger className="px-4 py-3 hover:bg-gray-50 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+                  <div className="font-medium">{section.title}</div>
+                  <div className="text-sm text-gray-500 mt-1 sm:mt-0">
+                    {totalItems} {totalItems === 1 ? "item" : "items"} • {formattedDuration}
                   </div>
-                  <span className="text-sm text-muted-foreground">{lecture.duration}</span>
-                </li>
-              ))}
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-3">
+                <ul className="space-y-2">
+                  {videos.map((video) => (
+                    <li key={video.id} className="py-2 border-b last:border-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-0 mr-2 h-8 w-8 rounded-full"
+                            onClick={() => handleOpenVideo(video)}
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                          <div>
+                            <div className="font-medium">{video.title}</div>
+                            <div className="text-sm text-gray-500">{video.duration}</div>
+                          </div>
+                        </div>
+                        {video.isPreview ? (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Preview</span>
+                        ) : (
+                          <Lock className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+                    </li>
+                  ))}
+
+                  {materials.map((material) => (
+                    <li key={material.id} className="py-2 border-b last:border-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Button variant="ghost" size="sm" className="p-0 mr-2 h-8 w-8 rounded-full" disabled>
+                            <File className="h-4 w-4" />
+                          </Button>
+                          <div>
+                            <div className="font-medium">{material.title}</div>
+                            <div className="text-sm text-gray-500">
+                              {material.fileType} • {material.fileSize}
+                            </div>
+                          </div>
+                        </div>
+                        <Lock className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          )
+        })}
+      </Accordion>
+
+      <Dialog open={!!openVideo} onOpenChange={(open) => !open && handleCloseVideo()}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="p-4">
+            <DialogTitle>{openVideo?.title}</DialogTitle>
+          </DialogHeader>
+          {openVideo && (
+            <VideoPlayer
+              videoUrl={openVideo.videoUrl}
+              courseId={openVideo.courseId}
+              previewOnly={openVideo.isPreview}
+              lessonTitle={openVideo.title}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
