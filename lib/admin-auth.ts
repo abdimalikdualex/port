@@ -9,15 +9,15 @@ interface AdminUser {
   createdAt: Date
 }
 
-// Initial super admin - REPLACE THIS WITH YOUR OWN CREDENTIALS
+// Initial super admin - this would typically be set up during initial deployment
 const INITIAL_SUPER_ADMIN: AdminUser = {
   id: "1",
-  name: "Abdulmalik", // Change to your name
-  email: "amalikduale@gmail.com", // Change to your email
+  name: "Super Admin",
+  email: "superadmin@example.com",
   // In a real app, this would be hashed
-  password: "Maisha@0134", // Change to your password
+  password: "superadmin123",
   role: "super_admin",
-  createdAt: new Date(),
+  createdAt: new Date("2023-01-01"),
 }
 
 // Admin users store - initialized with the super admin
@@ -103,58 +103,4 @@ export function deleteAdmin(adminIdToDelete: string, requestingAdminId: string):
   adminUsers = adminUsers.filter((admin) => admin.id !== adminIdToDelete)
 
   return adminUsers.length < initialLength
-}
-
-// Add a function to update admin credentials
-export function updateAdminCredentials(
-  adminId: string,
-  requestingAdminId: string,
-  updates: Partial<Omit<AdminUser, "id" | "role" | "createdAt">>,
-): AdminUser | null {
-  // Check if the requesting admin exists and is authorized
-  const requestingAdmin = adminUsers.find((admin) => admin.id === requestingAdminId)
-
-  // Only allow updates if you're updating your own account or you're a super admin
-  if (!requestingAdmin || (requestingAdmin.id !== adminId && requestingAdmin.role !== "super_admin")) {
-    return null
-  }
-
-  // Find the admin to update
-  const adminIndex = adminUsers.findIndex((admin) => admin.id === adminId)
-  if (adminIndex === -1) {
-    return null
-  }
-
-  // Update the admin
-  adminUsers[adminIndex] = {
-    ...adminUsers[adminIndex],
-    ...updates,
-  }
-
-  // Don't return the password in the response
-  const { password, ...adminWithoutPassword } = adminUsers[adminIndex]
-  return adminWithoutPassword as AdminUser
-}
-
-// Add a function to create the first admin (for initial setup)
-export function setupInitialAdmin(name: string, email: string, password: string): AdminUser | null {
-  // Only allow this if no admins exist yet
-  if (adminUsers.length > 0) {
-    return null
-  }
-
-  const admin: AdminUser = {
-    id: "1",
-    name,
-    email,
-    password,
-    role: "super_admin",
-    createdAt: new Date(),
-  }
-
-  adminUsers.push(admin)
-
-  // Don't return the password in the response
-  const { password: _, ...adminWithoutPassword } = admin
-  return adminWithoutPassword as AdminUser
 }

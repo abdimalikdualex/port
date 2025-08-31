@@ -64,38 +64,29 @@ export default function VideoUploader({ setIsUploading, onUploadComplete }: Vide
     setIsUploaded(false)
     setUploadProgress(0)
 
-    // In a real implementation, you would use FormData and fetch to upload the file
-    // For this demo, we'll simulate the upload process
-    const simulateUpload = () => {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += Math.random() * 10
-        if (progress > 100) progress = 100
+    // Simulate upload progress
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += 5
+      setUploadProgress(progress)
 
-        setUploadProgress(Math.floor(progress))
+      if (progress >= 100) {
+        clearInterval(interval)
+        setIsUploading(false)
+        setIsUploaded(true)
 
-        if (progress === 100) {
-          clearInterval(interval)
-          setTimeout(() => {
-            setIsUploading(false)
-            setIsUploaded(true)
-
-            // Generate a fake video URL - in a real app, this would come from your backend
-            const fakeVideoUrl = URL.createObjectURL(file)
-            if (onUploadComplete) {
-              onUploadComplete(fakeVideoUrl)
-            }
-
-            toast({
-              title: "Upload complete",
-              description: "Your video has been uploaded successfully",
-            })
-          }, 500)
+        // Generate a fake video URL - in a real app, this would come from your backend
+        const fakeVideoUrl = `https://your-video-server.com/videos/${Date.now()}-${file.name}`
+        if (onUploadComplete) {
+          onUploadComplete(fakeVideoUrl)
         }
-      }, 300)
-    }
 
-    simulateUpload()
+        toast({
+          title: "Upload complete",
+          description: "Your video has been uploaded successfully",
+        })
+      }
+    }, 300)
   }
 
   const cancelUpload = () => {

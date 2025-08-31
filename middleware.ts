@@ -1,42 +1,33 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { updateSession } from "./lib/auth"
 
-export async function middleware(request: NextRequest) {
-  // Update the session if needed
-  const response = await updateSession(request)
-  if (response) return response
+export function middleware(request: NextRequest) {
+  // Get the pathname of the request
+  const path = request.nextUrl.pathname
 
-  // Get the pathname
-  const pathname = request.nextUrl.pathname
+  // Check if the path starts with /admin
+  const isAdminPath = path.startsWith("/admin")
 
-  // Admin routes protection
-  if (pathname.startsWith("/admin")) {
-    const token = request.cookies.get("token")?.value
+  // Exclude the admin login page from protection
+  const isAdminLoginPage = path === "/admin/login"
 
-    // If there's no token, redirect to login
-    if (!token) {
-      const url = new URL("/admin/login", request.url)
-      url.searchParams.set("redirect", pathname)
-      return NextResponse.redirect(url)
-    }
+  // Check if the user is authenticated as admin
+  const adminSession = request.cookies.get("adminSession")?.value
+
+  // If trying to access admin pages without being logged in (except login page)
+  if (isAdminPath && !adminSession && !isAdminLoginPage) {
+    // Redirect to the admin login page
+    return NextResponse.redirect(new URL("/admin/login", request.url))
   }
 
-  // Dashboard routes protection
-  if (pathname.startsWith("/dashboard")) {
-    const token = request.cookies.get("token")?.value
-
-    // If there's no token, redirect to login
-    if (!token) {
-      const url = new URL("/auth/login", request.url)
-      url.searchParams.set("redirect", pathname)
-      return NextResponse.redirect(url)
-    }
+  // If already logged in and trying to access login page, redirect to admin dashboard
+  if (isAdminLoginPage && adminSession) {
+    return NextResponse.redirect(new URL("/admin", request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*"],
+  matcher: ["/admin/:path*"],
 }

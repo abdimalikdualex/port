@@ -4,129 +4,114 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get("redirect") || "/dashboard"
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  })
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, rememberMe: checked }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
-    setError("")
 
-    const formData = new FormData(event.currentTarget)
-
+    // Simulate authentication
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        router.push(redirect)
-        router.refresh()
-      } else {
-        setError(data.error || "Invalid credentials")
-      }
+      // In a real app, you would call your authentication API here
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      router.push("/dashboard")
     } catch (error) {
-      setError("An error occurred. Please try again.")
+      console.error("Login failed:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <input type="hidden" name="remember" defaultValue="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
+    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-muted/50">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Login to your account</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email and password to access your account
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                placeholder="name@example.com"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
               />
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="remember" checked={formData.rememberMe} onCheckedChange={handleCheckboxChange} />
+              <Label htmlFor="remember" className="text-sm font-normal">
                 Remember me
-              </label>
+              </Label>
             </div>
-
-            <div className="text-sm">
-              <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
+            <div className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <Link href="/auth/signup" className="text-primary hover:underline">
+                Sign up
               </Link>
             </div>
-          </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </button>
-          </div>
+          </CardFooter>
         </form>
-      </div>
+      </Card>
     </div>
   )
 }

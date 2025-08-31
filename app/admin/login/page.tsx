@@ -38,43 +38,31 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // Simulate authentication - in a real app, this would be an API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Check credentials against our mock data
-      // In a real app, this would be validated by your backend
-      if (formData.email === "admin@example.com" && formData.password === "admin123") {
-        // Store admin info in localStorage
-        localStorage.setItem("adminLoggedIn", "true")
+      // For demo purposes, we'll use hardcoded credentials
+      // In a real app, you would call an API endpoint
+      if (
+        (formData.email === "superadmin@example.com" && formData.password === "superadmin123") ||
+        (formData.email === "admin@example.com" && formData.password === "admin123")
+      ) {
+        // Set admin info in localStorage
+        const isSuper = formData.email === "superadmin@example.com"
         localStorage.setItem(
           "adminUser",
           JSON.stringify({
-            id: "admin-1",
-            name: "Admin User",
+            id: isSuper ? "1" : "2",
+            name: isSuper ? "Super Admin" : "Regular Admin",
             email: formData.email,
-            role: "super_admin",
+            role: isSuper ? "super_admin" : "admin",
           }),
         )
 
-        // Redirect to admin dashboard
-        router.push("/admin")
-      } else if (formData.email === "amalikduale@gmail.com" && formData.password === "Maisha@0134") {
-        // Store super admin info in localStorage
+        // Set a flag to indicate the admin is logged in
         localStorage.setItem("adminLoggedIn", "true")
-        localStorage.setItem(
-          "adminUser",
-          JSON.stringify({
-            id: "1",
-            name: "Abdulmalik",
-            email: formData.email,
-            role: "super_admin",
-          }),
-        )
 
         // Redirect to admin dashboard
         router.push("/admin")
       } else {
-        setError("Invalid email or password. Please check your credentials.")
+        setError("Invalid email or password. Try superadmin@example.com / superadmin123")
       }
     } catch (error) {
       console.error("Login failed:", error)
@@ -112,7 +100,7 @@ export default function AdminLoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="your-email@example.com"
+                  placeholder="admin@example.com"
                   required
                   value={formData.email}
                   onChange={handleChange}

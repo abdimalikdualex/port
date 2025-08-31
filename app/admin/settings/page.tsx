@@ -27,7 +27,6 @@ import {
   Check,
   Shield,
   UserPlus,
-  User,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -199,18 +198,6 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
-          <Link href="/admin/settings/profile" className="block">
-            <Card className="hover:border-indigo-300 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-indigo-500" />
-                  Profile Settings
-                </CardTitle>
-                <CardDescription>Update your personal information and password</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
           <Card className="border-purple-200">
             <CardHeader>
               <CardTitle>User Management</CardTitle>

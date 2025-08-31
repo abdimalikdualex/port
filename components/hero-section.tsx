@@ -54,12 +54,8 @@ export default function HeroSection() {
               <Button size="lg" className="bg-white text-indigo-600 hover:bg-indigo-50" asChild>
                 <Link href="/courses">Browse Courses</Link>
               </Button>
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-2 border-primary"
-                asChild
-              >
-                <Link href="/auth/signup">Sign Up Now</Link>
+              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
+                <Link href="/auth/signup">Sign Up</Link>
               </Button>
             </motion.div>
           </motion.div>

@@ -15,8 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Save, Film, Eye, Clock, Calendar, Tag } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import ThumbnailUploader from "@/components/admin/thumbnail-uploader"
-import VideoPlayer from "@/components/video-player"
 
 // Mock data for a single video
 const getMockVideo = (id: string) => ({
@@ -27,7 +25,6 @@ const getMockVideo = (id: string) => ({
   duration: "12:34",
   date: "Mar 5, 2023",
   thumbnail: "/placeholder.svg?height=180&width=320",
-  videoUrl: null,
   status: "published",
   isPublic: true,
   tags: ["web design", "html", "css"],
@@ -42,7 +39,6 @@ export default function VideoEditPage({ params }: { params: { id: string } }) {
   const [video, setVideo] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("details")
   const [newTag, setNewTag] = useState("")
-  const [showVideoPreview, setShowVideoPreview] = useState(false)
 
   useEffect(() => {
     // In a real app, you would fetch the video data from your API
@@ -84,14 +80,6 @@ export default function VideoEditPage({ params }: { params: { id: string } }) {
 
   const handleRemoveTag = (tagToRemove: string) => {
     setVideo((prev) => ({ ...prev, tags: prev.tags.filter((tag: string) => tag !== tagToRemove) }))
-  }
-
-  const handleThumbnailUpload = (thumbnailUrl: string) => {
-    setVideo((prev) => ({ ...prev, thumbnail: thumbnailUrl }))
-  }
-
-  const handleVideoUpload = (videoUrl: string) => {
-    setVideo((prev) => ({ ...prev, videoUrl: videoUrl }))
   }
 
   const handleSave = async () => {
@@ -242,7 +230,19 @@ export default function VideoEditPage({ params }: { params: { id: string } }) {
                   <CardDescription>Upload or change the video thumbnail.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ThumbnailUploader currentThumbnail={video.thumbnail} onUploadComplete={handleThumbnailUpload} />
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-48 aspect-video rounded-md overflow-hidden bg-muted">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <Film className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <Button variant="outline" className="mb-2">
+                        Upload New Thumbnail
+                      </Button>
+                      <p className="text-xs text-muted-foreground">Recommended size: 1280x720px (16:9)</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -305,26 +305,16 @@ export default function VideoEditPage({ params }: { params: { id: string } }) {
                   <CardDescription>Preview how your video will appear to students.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {video.videoUrl && showVideoPreview ? (
-                    <div className="aspect-video bg-black rounded-md overflow-hidden">
-                      <VideoPlayer videoUrl={video.videoUrl} onClose={() => setShowVideoPreview(false)} />
+                  <div className="aspect-video bg-black rounded-md flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Film className="mx-auto h-12 w-12 mb-2" />
+                      <p>Video preview would appear here</p>
+                      <p className="text-sm text-gray-400 mt-2">Actual video player would be implemented here</p>
                     </div>
-                  ) : (
-                    <div className="aspect-video bg-black rounded-md flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <Film className="mx-auto h-12 w-12 mb-2" />
-                        <p>{video.videoUrl ? "Click 'Test Playback' to preview" : "No video uploaded yet"}</p>
-                        <p className="text-sm text-gray-400 mt-2">
-                          {video.videoUrl ? "Video is ready to play" : "Upload a video file first"}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button variant="outline" disabled={!video.videoUrl} onClick={() => setShowVideoPreview(true)}>
-                    Test Playback
-                  </Button>
+                  <Button variant="outline">Test Playback</Button>
                   <Button variant="outline">View as Student</Button>
                 </CardFooter>
               </Card>
@@ -398,12 +388,7 @@ export default function VideoEditPage({ params }: { params: { id: string } }) {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => setShowVideoPreview(true)}
-                disabled={!video.videoUrl}
-              >
+              <Button variant="outline" className="w-full justify-start">
                 <Eye className="h-4 w-4 mr-2" />
                 Preview Video
               </Button>
