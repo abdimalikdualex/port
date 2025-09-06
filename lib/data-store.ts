@@ -291,7 +291,7 @@ const defaultSettings: Settings = {
 }
 
 // Data store class
-class DataStore {
+export class DataStore {
   private static instance: DataStore
 
   private constructor() {
