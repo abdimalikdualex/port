@@ -2,113 +2,192 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Shield, User, Lock } from "lucide-react"
+import { Loader2, Lock, User, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
 
-export default function AdminLogin() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+export default function AdminLoginPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [mounted, setMounted] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  })
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    setMounted(true)
+
+    // Check if already logged in
+    if (typeof window !== "undefined") {
+      const isLoggedIn = localStorage.getItem("adminLoggedIn")
+      const adminUser = localStorage.getItem("adminUser")
+
+      if (isLoggedIn === "true" && adminUser) {
+        router.push("/admin")
+      }
+    }
+  }, [router])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    // Clear error when user starts typing
+    if (error) setError("")
+  }
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      rememberMe: checked,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
     try {
-      // Check credentials
-      if (
-        (email === "superadmin@example.com" && password === "superadmin123") ||
-        (email === "admin@example.com" && password === "admin123")
-      ) {
-        const adminData = {
-          email,
-          name: email === "superadmin@example.com" ? "Abdulmalik" : "Admin User",
-          role: email === "superadmin@example.com" ? "Super Admin" : "Admin",
+      // Validate credentials
+      const validCredentials = [
+        { email: "superadmin@example.com", password: "superadmin123", role: "super_admin", name: "Super Admin" },
+        { email: "admin@example.com", password: "admin123", role: "admin", name: "Admin User" },
+      ]
+
+      const user = validCredentials.find((cred) => cred.email === formData.email && cred.password === formData.password)
+
+      if (user) {
+        // Create admin user object
+        const adminUser = {
+          id: user.role === "super_admin" ? "1" : "2",
+          name: user.name,
+          email: user.email,
+          role: user.role,
           loginTime: new Date().toISOString(),
         }
 
-        // Store admin session
-        if (typeof window !== "undefined") {
-          localStorage.setItem("admin_session", JSON.stringify(adminData))
-          if (rememberMe) {
-            localStorage.setItem("admin_remember", "true")
-          }
+        // Store in localStorage
+        localStorage.setItem("adminLoggedIn", "true")
+        localStorage.setItem("adminUser", JSON.stringify(adminUser))
+
+        if (formData.rememberMe) {
+          localStorage.setItem("adminRememberMe", "true")
         }
 
-        toast.success("Login successful! Redirecting...")
+        toast.success("Login successful! Redirecting to dashboard...")
 
-        // Redirect to admin dashboard
+        // Small delay for better UX, then redirect
         setTimeout(() => {
           window.location.href = "/admin"
-        }, 500)
+        }, 1000)
       } else {
-        toast.error("Invalid credentials. Please check your email and password.")
+        setError("Invalid email or password. Please check your credentials and try again.")
+        toast.error("Login failed. Please check your credentials.")
       }
     } catch (error) {
-      toast.error("Login failed. Please try again.")
+      console.error("Login error:", error)
+      setError("An unexpected error occurred. Please try again.")
+      toast.error("An error occurred during login.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Don't render until mounted to prevent hydration issues
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
-            <Shield className="w-6 h-6 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+      <Card className="w-full max-w-md shadow-xl border-0">
+        <CardHeader className="space-y-1 text-center pb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
+              <Lock className="h-8 w-8 text-white" />
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the admin panel</CardDescription>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            Admin Login
+          </CardTitle>
+          <CardDescription className="text-gray-600">Enter your credentials to access the admin panel</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive" className="border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  placeholder="Enter your email"
                   required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="pl-10 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <button
-                  type="button"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
-                  onClick={() => toast.info("Contact system administrator for password reset")}
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <Link
+                  href="#"
+                  className="text-xs text-indigo-600 hover:text-indigo-500 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    toast.info("Contact system administrator for password reset")
+                  }}
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
+                  name="password"
                   type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  placeholder="Enter your password"
                   required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="pl-10 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -116,31 +195,54 @@ export default function AdminLogin() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                checked={formData.rememberMe}
+                onCheckedChange={handleCheckboxChange}
+                disabled={isLoading}
+                className="border-gray-300"
               />
-              <Label htmlFor="remember" className="text-sm">
-                Remember me
+              <Label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+                Remember me for 30 days
               </Label>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</p>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p>
-                  <strong>Super Admin:</strong> superadmin@example.com / superadmin123
-                </p>
-                <p>
-                  <strong>Regular Admin:</strong> admin@example.com / admin123
-                </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2 text-sm">Demo Credentials:</h4>
+              <div className="space-y-1 text-xs text-blue-700">
+                <div className="flex justify-between">
+                  <span className="font-medium">Super Admin:</span>
+                  <span>superadmin@example.com / superadmin123</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Regular Admin:</span>
+                  <span>admin@example.com / admin123</span>
+                </div>
               </div>
             </div>
+          </CardContent>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login to Admin Panel"}
+          <CardFooter className="flex flex-col space-y-4 pt-6">
+            <Button
+              type="submit"
+              className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in to Admin Panel"
+              )}
             </Button>
-          </form>
-        </CardContent>
+
+            <div className="text-center">
+              <Link href="/" className="text-sm text-gray-600 hover:text-indigo-600 hover:underline transition-colors">
+                ← Return to Website
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   )
