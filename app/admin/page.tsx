@@ -13,25 +13,29 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const loadAnalytics = () => {
-      const data = dataStore.getAnalytics()
-      setAnalytics(data)
-      setIsLoading(false)
+      try {
+        const data = dataStore.getAnalytics()
+        setAnalytics(data)
+      } catch (error) {
+        console.error("Error loading analytics:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     loadAnalytics()
-
-    // Refresh analytics every 30 seconds
-    const interval = setInterval(loadAnalytics, 30000)
-    return () => clearInterval(interval)
   }, [])
 
   if (isLoading || !analytics) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-indigo-900">Dashboard</h1>
+          <p className="text-lg text-indigo-700">Loading dashboard data...</p>
+        </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse border-purple-200">
               <CardContent className="p-6">
                 <div className="h-16 bg-gray-200 rounded"></div>
               </CardContent>

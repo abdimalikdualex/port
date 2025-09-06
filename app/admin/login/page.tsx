@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -23,6 +22,16 @@ export default function AdminLoginPage() {
     rememberMe: false,
   })
 
+  useEffect(() => {
+    // Check if admin is already logged in
+    if (typeof window !== "undefined") {
+      const adminLoggedIn = localStorage.getItem("adminLoggedIn") === "true"
+      if (adminLoggedIn) {
+        router.push("/admin")
+      }
+    }
+  }, [router])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -38,31 +47,29 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // For demo purposes, we'll use hardcoded credentials
-      // In a real app, you would call an API endpoint
+      // Check credentials
       if (
         (formData.email === "superadmin@example.com" && formData.password === "superadmin123") ||
         (formData.email === "admin@example.com" && formData.password === "admin123")
       ) {
         // Set admin info in localStorage
         const isSuper = formData.email === "superadmin@example.com"
-        localStorage.setItem(
-          "adminUser",
-          JSON.stringify({
-            id: isSuper ? "1" : "2",
-            name: isSuper ? "Super Admin" : "Regular Admin",
-            email: formData.email,
-            role: isSuper ? "super_admin" : "admin",
-          }),
-        )
+        const adminUser = {
+          id: isSuper ? "1" : "2",
+          name: isSuper ? "Super Admin" : "Regular Admin",
+          email: formData.email,
+          role: isSuper ? "super_admin" : "admin",
+        }
 
-        // Set a flag to indicate the admin is logged in
+        localStorage.setItem("adminUser", JSON.stringify(adminUser))
         localStorage.setItem("adminLoggedIn", "true")
 
         // Redirect to admin dashboard
         router.push("/admin")
       } else {
-        setError("Invalid email or password. Try superadmin@example.com / superadmin123")
+        setError(
+          "Invalid email or password. Try superadmin@example.com / superadmin123 or admin@example.com / admin123",
+        )
       }
     } catch (error) {
       console.error("Login failed:", error)
@@ -105,6 +112,7 @@ export default function AdminLoginPage() {
                   value={formData.email}
                   onChange={handleChange}
                   className="pl-10"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -126,15 +134,27 @@ export default function AdminLoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   className="pl-10"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox id="remember" checked={formData.rememberMe} onCheckedChange={handleCheckboxChange} />
+              <Checkbox
+                id="remember"
+                checked={formData.rememberMe}
+                onCheckedChange={handleCheckboxChange}
+                disabled={isLoading}
+              />
               <Label htmlFor="remember" className="text-sm font-normal">
                 Remember me
               </Label>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-md text-sm">
+              <p className="font-medium text-blue-900 mb-1">Demo Credentials:</p>
+              <p className="text-blue-700">Super Admin: superadmin@example.com / superadmin123</p>
+              <p className="text-blue-700">Regular Admin: admin@example.com / admin123</p>
             </div>
           </CardContent>
 

@@ -30,6 +30,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  SidebarInset,
 } from "@/components/ui/sidebar"
 import {
   AlertDialog,
@@ -88,7 +89,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if admin is logged in
+    // Check if admin is logged in immediately
     const adminLoggedIn = localStorage.getItem("adminLoggedIn") === "true"
     const adminUserStr = localStorage.getItem("adminUser")
 
@@ -100,11 +101,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     try {
       const user = JSON.parse(adminUserStr)
       setAdminUser(user)
+      setIsLoading(false) // Set loading to false immediately after parsing
     } catch (error) {
       console.error("Error parsing admin user:", error)
       router.push("/admin/login")
-    } finally {
-      setIsLoading(false)
     }
   }, [router])
 
@@ -118,7 +118,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   if (isLoading) {
-    return null // Or a loading spinner
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="text-center">
+          <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-indigo-600 text-sm">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -134,7 +141,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 Admin
               </span>
             </Link>
-            <SidebarTrigger />
           </SidebarHeader>
 
           <SidebarContent>
@@ -162,8 +168,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   {adminUser?.name?.charAt(0) || "A"}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-medium">{adminUser?.name || "Admin User"}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{adminUser?.name || "Admin User"}</p>
                 <div className="flex items-center text-xs text-muted-foreground">
                   {adminUser?.role === "super_admin" ? (
                     <>
@@ -181,7 +187,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+              <Button variant="outline" size="sm" className="w-full justify-start bg-transparent" asChild>
                 <Link href="/">
                   <Home className="h-4 w-4 mr-2" />
                   Back to Website
@@ -190,7 +196,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full justify-start text-red-500 hover:text-red-600">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-red-500 hover:text-red-600 bg-transparent"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </Button>
@@ -214,7 +224,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white/50 backdrop-blur-sm">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Admin Panel</span>
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-6">{children}</main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   )

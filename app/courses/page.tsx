@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BookOpen, Clock, Users, Star, Search } from "lucide-react"
 import Link from "next/link"
 import { dataStore, type Course } from "@/lib/data-store"
+import dynamic from "next/dynamic"
 
-export default function CoursesPage() {
+function CoursesPageContent() {
   const [courses, setCourses] = useState<Course[]>([])
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -20,24 +21,38 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState("popular")
   const [isLoading, setIsLoading] = useState(true)
   const [settings, setSettings] = useState<any>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    loadData()
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    filterAndSortCourses()
-  }, [courses, searchQuery, categoryFilter, levelFilter, sortBy])
+    if (mounted) {
+      loadData()
+    }
+  }, [mounted])
+
+  useEffect(() => {
+    if (mounted) {
+      filterAndSortCourses()
+    }
+  }, [courses, searchQuery, categoryFilter, levelFilter, sortBy, mounted])
 
   const loadData = () => {
     setIsLoading(true)
-    // Only show published courses to public
-    const allCourses = dataStore.getCourses().filter((course) => course.status === "published")
-    const appSettings = dataStore.getSettings()
+    try {
+      // Only show published courses to public
+      const allCourses = dataStore.getCourses().filter((course) => course.status === "published")
+      const appSettings = dataStore.getSettings()
 
-    setCourses(allCourses)
-    setSettings(appSettings)
-    setIsLoading(false)
+      setCourses(allCourses)
+      setSettings(appSettings)
+    } catch (error) {
+      console.error("Error loading data:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const filterAndSortCourses = () => {
@@ -71,6 +86,20 @@ export default function CoursesPage() {
     }
 
     setFilteredCourses(filtered)
+  }
+
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-indigo-900 mb-4">Our Courses</h1>
+            <p className="text-xl text-indigo-700">Loading courses...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const categories = ["all", ...new Set(courses.map((course) => course.category))]
@@ -300,3 +329,6 @@ export default function CoursesPage() {
     </div>
   )
 }
+
+// Export as dynamic component to prevent SSR issues
+export default dynamic(() => Promise.resolve(CoursesPageContent), { ssr: false })

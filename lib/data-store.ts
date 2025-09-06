@@ -306,27 +306,27 @@ class DataStore {
   }
 
   private initializeData() {
-    if (!localStorage.getItem("elearning_courses")) {
+    // Only initialize data in browser environment and do it efficiently
+    if (typeof window === "undefined") return
+
+    // Use a single check to see if data exists, then initialize all at once
+    const hasData = localStorage.getItem("elearning_courses")
+
+    if (!hasData) {
+      // Initialize all data in one batch to reduce localStorage operations
       localStorage.setItem("elearning_courses", JSON.stringify(defaultCourses))
-    }
-    if (!localStorage.getItem("elearning_videos")) {
       localStorage.setItem("elearning_videos", JSON.stringify(defaultVideos))
-    }
-    if (!localStorage.getItem("elearning_students")) {
       localStorage.setItem("elearning_students", JSON.stringify(defaultStudents))
-    }
-    if (!localStorage.getItem("elearning_payments")) {
       localStorage.setItem("elearning_payments", JSON.stringify(defaultPayments))
-    }
-    if (!localStorage.getItem("elearning_settings")) {
       localStorage.setItem("elearning_settings", JSON.stringify(defaultSettings))
     }
   }
 
   // Course methods
   getCourses(): Course[] {
+    if (typeof window === "undefined") return defaultCourses
     const courses = localStorage.getItem("elearning_courses")
-    return courses ? JSON.parse(courses) : []
+    return courses ? JSON.parse(courses) : defaultCourses
   }
 
   getCourse(id: string): Course | null {
@@ -343,7 +343,9 @@ class DataStore {
       updatedAt: new Date().toISOString(),
     }
     courses.push(newCourse)
-    localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    }
     return newCourse
   }
 
@@ -357,7 +359,9 @@ class DataStore {
       ...updates,
       updatedAt: new Date().toISOString(),
     }
-    localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    }
     return courses[index]
   }
 
@@ -366,20 +370,23 @@ class DataStore {
     const filteredCourses = courses.filter((course) => course.id !== id)
     if (filteredCourses.length === courses.length) return false
 
-    localStorage.setItem("elearning_courses", JSON.stringify(filteredCourses))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_courses", JSON.stringify(filteredCourses))
 
-    // Also delete associated videos
-    const videos = this.getVideos()
-    const filteredVideos = videos.filter((video) => video.courseId !== id)
-    localStorage.setItem("elearning_videos", JSON.stringify(filteredVideos))
+      // Also delete associated videos
+      const videos = this.getVideos()
+      const filteredVideos = videos.filter((video) => video.courseId !== id)
+      localStorage.setItem("elearning_videos", JSON.stringify(filteredVideos))
+    }
 
     return true
   }
 
   // Video methods
   getVideos(): Video[] {
+    if (typeof window === "undefined") return defaultVideos
     const videos = localStorage.getItem("elearning_videos")
-    return videos ? JSON.parse(videos) : []
+    return videos ? JSON.parse(videos) : defaultVideos
   }
 
   getVideo(id: string): Video | null {
@@ -401,14 +408,17 @@ class DataStore {
       updatedAt: new Date().toISOString(),
     }
     videos.push(newVideo)
-    localStorage.setItem("elearning_videos", JSON.stringify(videos))
 
-    // Update course video count
-    const courses = this.getCourses()
-    const courseIndex = courses.findIndex((course) => course.id === video.courseId)
-    if (courseIndex !== -1) {
-      courses[courseIndex].videos = this.getVideosByCourse(video.courseId)
-      localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_videos", JSON.stringify(videos))
+
+      // Update course video count
+      const courses = this.getCourses()
+      const courseIndex = courses.findIndex((course) => course.id === video.courseId)
+      if (courseIndex !== -1) {
+        courses[courseIndex].videos = this.getVideosByCourse(video.courseId)
+        localStorage.setItem("elearning_courses", JSON.stringify(courses))
+      }
     }
 
     return newVideo
@@ -424,7 +434,9 @@ class DataStore {
       ...updates,
       updatedAt: new Date().toISOString(),
     }
-    localStorage.setItem("elearning_videos", JSON.stringify(videos))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_videos", JSON.stringify(videos))
+    }
     return videos[index]
   }
 
@@ -434,14 +446,17 @@ class DataStore {
     if (!video) return false
 
     const filteredVideos = videos.filter((video) => video.id !== id)
-    localStorage.setItem("elearning_videos", JSON.stringify(filteredVideos))
 
-    // Update course video count
-    const courses = this.getCourses()
-    const courseIndex = courses.findIndex((course) => course.id === video.courseId)
-    if (courseIndex !== -1) {
-      courses[courseIndex].videos = this.getVideosByCourse(video.courseId)
-      localStorage.setItem("elearning_courses", JSON.stringify(courses))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_videos", JSON.stringify(filteredVideos))
+
+      // Update course video count
+      const courses = this.getCourses()
+      const courseIndex = courses.findIndex((course) => course.id === video.courseId)
+      if (courseIndex !== -1) {
+        courses[courseIndex].videos = this.getVideosByCourse(video.courseId)
+        localStorage.setItem("elearning_courses", JSON.stringify(courses))
+      }
     }
 
     return true
@@ -449,8 +464,9 @@ class DataStore {
 
   // Student methods
   getStudents(): Student[] {
+    if (typeof window === "undefined") return defaultStudents
     const students = localStorage.getItem("elearning_students")
-    return students ? JSON.parse(students) : []
+    return students ? JSON.parse(students) : defaultStudents
   }
 
   getStudent(id: string): Student | null {
@@ -465,7 +481,9 @@ class DataStore {
       id: Date.now().toString(),
     }
     students.push(newStudent)
-    localStorage.setItem("elearning_students", JSON.stringify(students))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_students", JSON.stringify(students))
+    }
     return newStudent
   }
 
@@ -475,14 +493,17 @@ class DataStore {
     if (index === -1) return null
 
     students[index] = { ...students[index], ...updates }
-    localStorage.setItem("elearning_students", JSON.stringify(students))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_students", JSON.stringify(students))
+    }
     return students[index]
   }
 
   // Payment methods
   getPayments(): Payment[] {
+    if (typeof window === "undefined") return defaultPayments
     const payments = localStorage.getItem("elearning_payments")
-    return payments ? JSON.parse(payments) : []
+    return payments ? JSON.parse(payments) : defaultPayments
   }
 
   addPayment(payment: Omit<Payment, "id">): Payment {
@@ -492,12 +513,15 @@ class DataStore {
       id: Date.now().toString(),
     }
     payments.push(newPayment)
-    localStorage.setItem("elearning_payments", JSON.stringify(payments))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_payments", JSON.stringify(payments))
+    }
     return newPayment
   }
 
   // Settings methods
   getSettings(): Settings {
+    if (typeof window === "undefined") return defaultSettings
     const settings = localStorage.getItem("elearning_settings")
     return settings ? JSON.parse(settings) : defaultSettings
   }
@@ -508,7 +532,9 @@ class DataStore {
       ...currentSettings,
       ...updates,
     }
-    localStorage.setItem("elearning_settings", JSON.stringify(newSettings))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("elearning_settings", JSON.stringify(newSettings))
+    }
     return newSettings
   }
 
