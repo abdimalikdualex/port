@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -27,17 +26,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     setMounted(true)
-
-    // Check if already logged in
-    if (typeof window !== "undefined") {
-      const isLoggedIn = localStorage.getItem("adminLoggedIn")
-      const adminUser = localStorage.getItem("adminUser")
-
-      if (isLoggedIn === "true" && adminUser) {
-        router.push("/admin")
-      }
-    }
-  }, [router])
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -45,7 +34,6 @@ export default function AdminLoginPage() {
       ...prev,
       [name]: value,
     }))
-    // Clear error when user starts typing
     if (error) setError("")
   }
 
@@ -61,24 +49,24 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError("")
 
+    console.log("Login attempt with:", formData.email, formData.password)
+
     try {
-      // Validate credentials
-      const validCredentials = [
-        { email: "superadmin@example.com", password: "superadmin123", role: "super_admin", name: "Super Admin" },
-        { email: "admin@example.com", password: "admin123", role: "admin", name: "Admin User" },
-      ]
-
-      const user = validCredentials.find((cred) => cred.email === formData.email && cred.password === formData.password)
-
-      if (user) {
-        // Create admin user object
+      // Check credentials
+      if (
+        (formData.email === "superadmin@example.com" && formData.password === "superadmin123") ||
+        (formData.email === "admin@example.com" && formData.password === "admin123")
+      ) {
+        const isSuper = formData.email === "superadmin@example.com"
         const adminUser = {
-          id: user.role === "super_admin" ? "1" : "2",
-          name: user.name,
-          email: user.email,
-          role: user.role,
+          id: isSuper ? "1" : "2",
+          name: isSuper ? "Super Admin" : "Admin User",
+          email: formData.email,
+          role: isSuper ? "super_admin" : "admin",
           loginTime: new Date().toISOString(),
         }
+
+        console.log("Setting admin user:", adminUser)
 
         // Store in localStorage
         localStorage.setItem("adminLoggedIn", "true")
@@ -88,26 +76,25 @@ export default function AdminLoginPage() {
           localStorage.setItem("adminRememberMe", "true")
         }
 
-        toast.success("Login successful! Redirecting to dashboard...")
+        toast.success("Login successful! Redirecting...")
 
-        // Small delay for better UX, then redirect
+        // Force redirect using window.location
         setTimeout(() => {
           window.location.href = "/admin"
-        }, 1000)
+        }, 500)
       } else {
-        setError("Invalid email or password. Please check your credentials and try again.")
-        toast.error("Login failed. Please check your credentials.")
+        setError("Invalid email or password. Please check your credentials.")
+        toast.error("Invalid credentials")
       }
     } catch (error) {
       console.error("Login error:", error)
-      setError("An unexpected error occurred. Please try again.")
-      toast.error("An error occurred during login.")
+      setError("An error occurred during login.")
+      toast.error("Login failed")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Don't render until mounted to prevent hydration issues
   if (!mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center">

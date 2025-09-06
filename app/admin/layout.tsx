@@ -98,18 +98,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       return
     }
 
+    console.log("Checking authentication for path:", pathname)
+
     // Check authentication
     if (typeof window !== "undefined") {
       const isLoggedIn = localStorage.getItem("adminLoggedIn")
       const adminUserStr = localStorage.getItem("adminUser")
 
+      console.log("Auth check - isLoggedIn:", isLoggedIn, "adminUser:", adminUserStr)
+
       if (isLoggedIn !== "true" || !adminUserStr) {
+        console.log("Not authenticated, redirecting to login")
         router.push("/admin/login")
         return
       }
 
       try {
         const user = JSON.parse(adminUserStr)
+        console.log("Parsed admin user:", user)
         setAdminUser(user)
       } catch (error) {
         console.error("Error parsing admin user:", error)
