@@ -79,6 +79,7 @@ interface AdminUser {
   email: string
   role: string
   loginTime: string
+  isAuthenticated: boolean
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -87,54 +88,63 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-
     // Skip auth check for login page
     if (pathname === "/admin/login") {
       setIsLoading(false)
       return
     }
 
-    console.log("Checking authentication for path:", pathname)
-
-    // Check authentication
-    if (typeof window !== "undefined") {
-      const isLoggedIn = localStorage.getItem("adminLoggedIn")
-      const adminUserStr = localStorage.getItem("adminUser")
-
-      console.log("Auth check - isLoggedIn:", isLoggedIn, "adminUser:", adminUserStr)
-
-      if (isLoggedIn !== "true" || !adminUserStr) {
-        console.log("Not authenticated, redirecting to login")
-        router.push("/admin/login")
-        return
-      }
-
+    const checkAuthentication = () => {
       try {
+        const isLoggedIn = localStorage.getItem("adminLoggedIn")
+        const adminUserStr = localStorage.getItem("adminUser")
+        const sessionTime = localStorage.getItem("adminSessionTime")
+
+        // Check if session exists and is valid
+        if (isLoggedIn !== "true" || !adminUserStr || !sessionTime) {
+          router.replace("/admin/login")
+          return
+        }
+
+        // Check session timeout (24 hours)
+        const sessionAge = Date.now() - Number.parseInt(sessionTime)
+        const maxAge = 24 * 60 * 60 * 1000 // 24 hours
+
+        if (sessionAge > maxAge) {
+          localStorage.removeItem("adminLoggedIn")
+          localStorage.removeItem("adminUser")
+          localStorage.removeItem("adminSessionTime")
+          router.replace("/admin/login")
+          return
+        }
+
         const user = JSON.parse(adminUserStr)
-        console.log("Parsed admin user:", user)
-        setAdminUser(user)
+        if (user && user.isAuthenticated) {
+          setAdminUser(user)
+        } else {
+          router.replace("/admin/login")
+          return
+        }
       } catch (error) {
-        console.error("Error parsing admin user:", error)
-        localStorage.removeItem("adminLoggedIn")
-        localStorage.removeItem("adminUser")
-        router.push("/admin/login")
+        console.error("Authentication error:", error)
+        localStorage.clear()
+        router.replace("/admin/login")
         return
       }
+
+      setIsLoading(false)
     }
 
-    setIsLoading(false)
+    checkAuthentication()
   }, [router, pathname])
 
   const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("adminLoggedIn")
-      localStorage.removeItem("adminUser")
-      localStorage.removeItem("adminRememberMe")
-    }
+    localStorage.removeItem("adminLoggedIn")
+    localStorage.removeItem("adminUser")
+    localStorage.removeItem("adminSessionTime")
+    localStorage.removeItem("adminRememberMe")
     toast.success("Logged out successfully")
     window.location.href = "/admin/login"
   }
@@ -145,7 +155,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   // Show loading state
-  if (!mounted || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <div className="text-center">

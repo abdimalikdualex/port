@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -17,7 +18,6 @@ export default function AdminLoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,23 +25,28 @@ export default function AdminLoginPage() {
   })
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Check if already logged in
+    const checkAuth = () => {
+      try {
+        const isLoggedIn = localStorage.getItem("adminLoggedIn")
+        if (isLoggedIn === "true") {
+          router.replace("/admin")
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error)
+      }
+    }
+    checkAuth()
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
     if (error) setError("")
   }
 
   const handleCheckboxChange = (checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      rememberMe: checked,
-    }))
+    setFormData((prev) => ({ ...prev, rememberMe: checked }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,58 +54,67 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError("")
 
-    console.log("Login attempt with:", formData.email, formData.password)
-
     try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
       // Check credentials
-      if (
-        (formData.email === "superadmin@example.com" && formData.password === "superadmin123") ||
-        (formData.email === "admin@example.com" && formData.password === "admin123")
-      ) {
-        const isSuper = formData.email === "superadmin@example.com"
-        const adminUser = {
-          id: isSuper ? "1" : "2",
-          name: isSuper ? "Super Admin" : "Admin User",
-          email: formData.email,
-          role: isSuper ? "super_admin" : "admin",
+      const validCredentials = [
+        {
+          email: "superadmin@example.com",
+          password: "superadmin123",
+          role: "super_admin",
+          name: "Super Admin",
+          id: "1",
+        },
+        {
+          email: "admin@example.com",
+          password: "admin123",
+          role: "admin",
+          name: "Admin User",
+          id: "2",
+        },
+      ]
+
+      const user = validCredentials.find((cred) => cred.email === formData.email && cred.password === formData.password)
+
+      if (user) {
+        // Create admin session
+        const adminSession = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
           loginTime: new Date().toISOString(),
+          isAuthenticated: true,
         }
 
-        console.log("Setting admin user:", adminUser)
-
-        // Store in localStorage
+        // Store session data
         localStorage.setItem("adminLoggedIn", "true")
-        localStorage.setItem("adminUser", JSON.stringify(adminUser))
+        localStorage.setItem("adminUser", JSON.stringify(adminSession))
+        localStorage.setItem("adminSessionTime", Date.now().toString())
 
         if (formData.rememberMe) {
           localStorage.setItem("adminRememberMe", "true")
         }
 
-        toast.success("Login successful! Redirecting...")
+        toast.success("Login successful! Redirecting to dashboard...")
 
-        // Force redirect using window.location
+        // Force page reload to ensure clean state
         setTimeout(() => {
           window.location.href = "/admin"
-        }, 500)
+        }, 1500)
       } else {
-        setError("Invalid email or password. Please check your credentials.")
+        setError("Invalid email or password. Please check your credentials and try again.")
         toast.error("Invalid credentials")
       }
     } catch (error) {
       console.error("Login error:", error)
-      setError("An error occurred during login.")
+      setError("An error occurred during login. Please try again.")
       toast.error("Login failed")
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    )
   }
 
   return (
