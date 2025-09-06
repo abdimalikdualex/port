@@ -102,8 +102,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         const adminUserStr = localStorage.getItem("adminUser")
         const sessionTime = localStorage.getItem("adminSessionTime")
 
+        console.log("Auth check:", { isLoggedIn, hasUser: !!adminUserStr, sessionTime })
+
         // Check if session exists and is valid
         if (isLoggedIn !== "true" || !adminUserStr || !sessionTime) {
+          console.log("No valid session, redirecting to login")
           router.replace("/admin/login")
           return
         }
@@ -113,6 +116,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         const maxAge = 24 * 60 * 60 * 1000 // 24 hours
 
         if (sessionAge > maxAge) {
+          console.log("Session expired, clearing and redirecting")
           localStorage.removeItem("adminLoggedIn")
           localStorage.removeItem("adminUser")
           localStorage.removeItem("adminSessionTime")
@@ -122,8 +126,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
         const user = JSON.parse(adminUserStr)
         if (user && user.isAuthenticated) {
+          console.log("User authenticated:", user)
           setAdminUser(user)
         } else {
+          console.log("User not authenticated, redirecting")
           router.replace("/admin/login")
           return
         }

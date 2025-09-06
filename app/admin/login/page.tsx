@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -54,6 +53,8 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError("")
 
+    console.log("Login attempt:", formData.email)
+
     try {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -88,6 +89,8 @@ export default function AdminLoginPage() {
           loginTime: new Date().toISOString(),
           isAuthenticated: true,
         }
+
+        console.log("Login successful, storing session:", adminSession)
 
         // Store session data
         localStorage.setItem("adminLoggedIn", "true")
