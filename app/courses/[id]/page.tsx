@@ -7,9 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { BookOpen, Clock, Users, Star, Play, CheckCircle, Globe, Award, Target } from "lucide-react"
+import { BookOpen, Clock, Users, Star, Play, CheckCircle, Globe, Award, Target, Lock } from "lucide-react"
 import Link from "next/link"
 import { dataStore, type Course, type Video } from "@/lib/data-store"
+import { getCurrentUser, hasUserPurchasedCourse } from "@/lib/auth-utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function CoursePage() {
   const params = useParams()
@@ -19,6 +21,8 @@ export default function CoursePage() {
   const [videos, setVideos] = useState<Video[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [settings, setSettings] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [hasPurchased, setHasPurchased] = useState(false)
 
   useEffect(() => {
     if (courseId) {
@@ -29,6 +33,9 @@ export default function CoursePage() {
   const loadCourseData = () => {
     setIsLoading(true)
 
+    const user = getCurrentUser()
+    setCurrentUser(user)
+
     const courseData = dataStore.getCourse(courseId)
     const courseVideos = dataStore.getVideosByCourse(courseId).filter((video) => video.status === "published")
     const appSettings = dataStore.getSettings()
@@ -36,6 +43,12 @@ export default function CoursePage() {
     setCourse(courseData)
     setVideos(courseVideos)
     setSettings(appSettings)
+
+    if (user) {
+      const purchased = hasUserPurchasedCourse(user.id, courseId)
+      setHasPurchased(purchased)
+    }
+
     setIsLoading(false)
   }
 
@@ -219,19 +232,34 @@ export default function CoursePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {!hasPurchased && (
+                    <Alert className="mb-4 border-yellow-200 bg-yellow-50">
+                      <Lock className="h-4 w-4 text-yellow-600" />
+                      <AlertTitle className="text-yellow-900">Premium Content</AlertTitle>
+                      <AlertDescription className="text-yellow-800">
+                        Purchase this course to unlock all video content and learning materials.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="space-y-2">
                     {videos.length > 0 ? (
                       videos.map((video, index) => (
                         <div
                           key={video.id}
-                          className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                            hasPurchased ? "hover:bg-gray-50" : "opacity-75"
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-medium text-indigo-600">
                               {index + 1}
                             </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">{video.title}</h4>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-gray-900">{video.title}</h4>
+                                {!hasPurchased && <Lock className="h-3 w-3 text-gray-400" />}
+                              </div>
                               <p className="text-sm text-gray-500">{video.description}</p>
                             </div>
                           </div>
@@ -313,16 +341,28 @@ export default function CoursePage() {
                     <div className="text-lg text-gray-600">KSH {kshPrice.toLocaleString()}</div>
                   </div>
 
-                  {/* Enroll Button */}
-                  <Button
-                    size="lg"
-                    className="w-full mb-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-                    asChild
-                  >
-                    <Link href="/payment">Enroll Now</Link>
-                  </Button>
-
-                  <div className="text-center text-sm text-gray-500 mb-6">30-day money-back guarantee</div>
+                  {hasPurchased ? (
+                    <>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-center">
+                        <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-2" />
+                        <p className="text-green-900 font-medium text-sm">You have access to this course</p>
+                      </div>
+                      <Button size="lg" className="w-full mb-4 bg-green-500 hover:bg-green-600" asChild>
+                        <Link href="/dashboard">Go to My Courses</Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="lg"
+                        className="w-full mb-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+                        asChild
+                      >
+                        <Link href={`/payment?courseId=${courseId}`}>Enroll Now</Link>
+                      </Button>
+                      <div className="text-center text-sm text-gray-500 mb-6">30-day money-back guarantee</div>
+                    </>
+                  )}
 
                   <Separator className="mb-6" />
 

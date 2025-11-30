@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BookOpen, DollarSign, Film, User } from "lucide-react"
 
 const activities = [
@@ -53,25 +54,30 @@ const activities = [
 
 export default function RecentActivities() {
   return (
-    <div className="space-y-4">
-      {activities.map((activity, index) => (
-        <motion.div
-          key={activity.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="flex items-start space-x-3"
-        >
-          <div className={`${activity.color} p-2 rounded-full`}>
-            <activity.icon className="h-4 w-4" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">{activity.title}</p>
-            <p className="text-sm text-muted-foreground">{activity.description}</p>
-          </div>
-          <div className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</div>
-        </motion.div>
-      ))}
-    </div>
+    <Card className="border-0 shadow-md">
+      <CardHeader>
+        <CardTitle>Recent Activities</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {activities.map((activity, index) => (
+          <motion.div
+            key={activity.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="flex items-start space-x-3"
+          >
+            <div className={`${activity.color} p-2 rounded-full`}>
+              <activity.icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">{activity.title}</p>
+              <p className="text-xs text-slate-600">{activity.description}</p>
+            </div>
+            <div className="text-xs text-slate-500 whitespace-nowrap">{activity.time}</div>
+          </motion.div>
+        ))}
+      </CardContent>
+    </Card>
   )
 }

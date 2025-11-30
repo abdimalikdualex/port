@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +41,7 @@ interface RecentActivity {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalCourses: 0,
@@ -55,6 +57,17 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    const isLoggedIn = localStorage.getItem("adminLoggedIn")
+    const adminUser = localStorage.getItem("adminUser")
+
+    if (isLoggedIn !== "true" || !adminUser) {
+      console.log("[v0] Not authenticated, redirecting to login")
+      router.push("/admin/login")
+      return
+    }
+
+    console.log("[v0] User authenticated, loading dashboard")
+
     // Simulate loading dashboard data
     const loadDashboardData = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -113,7 +126,7 @@ export default function AdminDashboard() {
     }
 
     loadDashboardData()
-  }, [])
+  }, [router])
 
   const statCards = [
     {
@@ -183,24 +196,10 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome to your admin dashboard</p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-indigo-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     )
